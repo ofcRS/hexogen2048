@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "baseUrl": "./src",
+    "module": "esnext",
+    "lib": ["dom"],
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "noImplicitAny": true,
+    "jsx": "react",
+    "moduleResolution": "node",
+    "outDir": "build",
+    "noEmit": true,
+    "strict": true,
+    "strictPropertyInitialization": false
+  },
+  "include": [
+    "src/**/*.ts*"
+  ],
+  "exclude": [
+    "node_modules/**/*.*"
+  ]
+}
