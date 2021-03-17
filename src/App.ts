@@ -2,46 +2,99 @@ import { IGeometry } from './Geometry';
 import { IField } from './Field';
 import { IGame } from './Game';
 import { Axis, Direction, GameKey } from './types';
-import { gameKeys } from './consts';
-import { IHexagon } from "./Hexagon";
+import { gameKeys, keyMap } from './consts';
+import { IHexagon, IValueHexagon } from './Hexagon';
+import { IDataFetcher } from './DataFetcher';
 
 export class App {
     constructor(
         private readonly geometry: IGeometry,
-        private readonly _field: IField,
-        private readonly game: IGame
+        private readonly field: IField,
+        private readonly game: IGame,
+        private readonly dataFetcher: IDataFetcher
     ) {}
-
-    gameCells = [
-        { x: 0, y: 1, z: -1, value: 4 },
-        { x: -1, y: 1, z: 0, value: 2 },
-        { x: -1, y: 0, z: 1, value: 2 },
-    ];
 
     nowMoving = false;
 
     addButton = () => {
         window.addEventListener('keypress', async ({ key }) => {
-            if (!gameKeys.includes(key)) return;
-            if (this.nowMoving) return;
+            if (this.game.isGameKeyPressed(key)) {
+                if (this.nowMoving) return;
+                const axisToDirection = keyMap[key];
+                this.nowMoving = true;
+                const result: IValueHexagon[] = [];
+                this.game.goThroughAllFields(key, async (axisValue) => {
+                    const lineHexagons = this.field.valueHexagons
+                        .filter(
+                            (hexagon) =>
+                                hexagon.cellCoordinates[
+                                    axisToDirection[Direction.NoMove]
+                                ] === axisValue
+                        )
+                        .sort((prev, curr) => {
+                            const prevValue =
+                                prev.cellCoordinates[
+                                    axisToDirection[Direction.Forward]
+                                ];
+                            const currentValue =
+                                curr.cellCoordinates[
+                                    axisToDirection[Direction.Forward]
+                                ];
+                            if (prevValue < currentValue) return 1;
+                            if (prevValue === currentValue) return 0;
+                            return -1;
+                        });
 
-            this.nowMoving = true;
-            await Promise.all(
-                this._field._valueHexagons.map(async (hexagon: IHexagon) => {
-                    const newCenter  = this.game.moveAlongAxis(key as GameKey, hexagon.cellCoordinates);
+                    const axisSideCoordinates = this.game.getAxisSideCoordinates(
+                        key,
+                        axisValue
+                    );
 
-                    return this._field.moveHexagon(hexagon, newCenter);
-                })
-            );
-            this.nowMoving = false;
+                    for (
+                        let i = 0, limit = lineHexagons.length - 1;
+                        i <= limit;
+                        i++
+                    ) {
+                        const current = lineHexagons[i];
+                        const next = lineHexagons[i + 1];
+                        current.cellCoordinates = { ...axisSideCoordinates };
+                        console.log(axisSideCoordinates);
+                        axisSideCoordinates[
+                            axisToDirection[Direction.Forward]
+                        ] -= 1;
+                        axisSideCoordinates[
+                            axisToDirection[Direction.Backward]
+                        ] += 1;
+                        if (!next || next.value !== current.value) {
+                        } else {
+                            next.cellCoordinates = {
+                                ...current.cellCoordinates,
+                            };
+                            lineHexagons.splice(i, 1);
+                            next.value *= 2;
+                            limit--;
+                        }
+                    }
+                    result.push(...lineHexagons);
+                });
+                this.field.valueHexagons = result;
+                await Promise.all(
+                    this.field.valueHexagons.map((hex) => {
+                        return this.field.moveHexagon(hex, hex.cellCoordinates);
+                    })
+                );
+                this.game.data = this.field.valueHexagons.map((hexagon) =>
+                    hexagon.toCellData()
+                );
+                await this.dataFetcher.getDataFromServer();
+                this.nowMoving = false;
+            }
         });
     };
 
     start = () => {
         this.addButton();
-        this._field.initField();
-        this.gameCells.forEach((gameCell) => {
-            this._field.placeValueHexagon(gameCell, gameCell.value);
-        });
+        this.field.initField();
+        this.dataFetcher.getDataFromServer();
     };
 }

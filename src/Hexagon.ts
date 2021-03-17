@@ -1,7 +1,7 @@
 import { IField } from './Field';
 import { IGeometry } from './Geometry';
 import { IGame } from './Game';
-import { CellCoordinates } from './types';
+import { Axis, CellCoordinates, CellData } from './types';
 
 type Center = { x: number; y: number };
 
@@ -10,7 +10,12 @@ export interface IHexagon {
     moveTo: (coordinates: Center) => void;
     cellCoordinates: CellCoordinates;
     center: Center;
-    value?: number;
+    isEqualCoordinates: (coordinates: CellCoordinates) => boolean;
+}
+
+export interface IValueHexagon extends IHexagon {
+    value: number;
+    toCellData: () => CellData;
 }
 
 export class Hexagon implements IHexagon {
@@ -32,55 +37,72 @@ export class Hexagon implements IHexagon {
         this.value = value;
     }
 
+    isEqualCoordinates = (coordinates: CellCoordinates) => {
+        return (Object.keys(coordinates) as Axis[]).every(
+            (key) => coordinates[key] === this.cellCoordinates[key]
+        );
+    };
+
     moveTo = ({ y, x }: Center): void => {
         this.center.x = x;
         this.center.y = y;
     };
 
     draw = () => {
-        const x = this.center.x;
-        const y = this.center.y;
-
         const {
-            getDistanceToVerticalVertex,
-            getDistanceToHorizontalVertex,
+            getVerticalDistanceToVertex,
+            getHorizontalDistanceToVertex,
         } = this._geometry;
 
         const { ctx } = this._field;
 
-        // const relativeRecord = this._game.data.find(
-        //     ({ x, y, z }) =>
-        //         cellCoordinates.x === x &&
-        //         cellCoordinates.y === y &&
-        //         cellCoordinates.z === z
-        // );
+        const { x, y } = this.center;
 
         ctx.beginPath();
         for (let i = 0; i < 6; i++) {
-            const xPoint = x + getDistanceToHorizontalVertex(i * 60);
-            const yPoint = y + getDistanceToVerticalVertex(i * 60);
+            const xPoint = x + getHorizontalDistanceToVertex(i * 60);
+            const yPoint = y + getVerticalDistanceToVertex(i * 60);
 
             ctx.lineTo(xPoint, yPoint);
         }
 
-        ctx.fillText(`${this.value || ''}`, x, y);
-
         ctx.closePath();
         ctx.stroke();
 
-        // if (this.direction) {
-        //     this.prevValue += this._step;
-        // } else {
-        //     this.prevValue -= this._step;
-        // }
-        //
-        // if (this.prevValue > 1000 || this.prevValue < 0) {
-        //     this.direction = !this.direction;
-        // }
+        ctx.fillText(`${this.value || ''}`, x, y);
 
-        // setTimeout(() => {
-        //     this._field.ctx.clearRect(0, 0, 8000, 8000);
-        //     return window.requestAnimationFrame(this.draw);
-        // });
+        ctx.beginPath();
+        for (let i = 0; i < 6; i++) {
+            const xPoint = x + getHorizontalDistanceToVertex(i * 60, true);
+            const yPoint = y + getVerticalDistanceToVertex(i * 60, true);
+
+            ctx.lineTo(xPoint, yPoint);
+        }
+
+        ctx.closePath();
+        ctx.stroke();
+    };
+}
+
+export class ValueHexagon extends Hexagon implements IValueHexagon {
+    value: number;
+
+    constructor(
+        center: Center,
+        _field: IField,
+        _geometry: IGeometry,
+        _game: IGame,
+        cellCoordinates: CellCoordinates,
+        value: number
+    ) {
+        super(center, _field, _geometry, _game, cellCoordinates, value);
+        this.value = value;
+    }
+
+    toCellData = (): CellData => {
+        return {
+            ...this.cellCoordinates,
+            value: this.value,
+        };
     };
 }

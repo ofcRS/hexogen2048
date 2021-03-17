@@ -16,6 +16,10 @@ export type CellCoordinates = {
     z: number;
 };
 
+export type CellData = CellCoordinates & {
+    value: number;
+}
+
 export enum HexagonType {
     Field,
     Value,

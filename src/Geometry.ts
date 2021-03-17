@@ -1,6 +1,12 @@
 export interface IGeometry {
-    getDistanceToVerticalVertex: (angle?: number) => number;
-    getDistanceToHorizontalVertex: (angle?: number) => number;
+    getVerticalDistanceToVertex: (
+        angle?: number,
+        insidePath?: boolean
+    ) => number;
+    getHorizontalDistanceToVertex: (
+        angle?: number,
+        insidePath?: boolean
+    ) => number;
     calculateHorizontalOffsetForColumn: (column: number) => number;
     isCoordinatesApproximatelyEqual: (first: number, second: number) => boolean;
     radius: number;
@@ -9,18 +15,29 @@ export interface IGeometry {
 export class Geometry implements IGeometry {
     constructor(readonly radius: number) {}
 
-    getDistanceToVerticalVertex = (angle = 60) => {
-        return this.radius * Math.sin(Geometry.toRadians(angle));
+    getRadius = (insidePath?: boolean) => {
+        let radius = this.radius;
+        if (insidePath) {
+            radius -= 20;
+        }
+        return radius;
     };
 
-    getDistanceToHorizontalVertex = (angle = 60) => {
-        return this.radius * Math.cos(Geometry.toRadians(angle));
+    getVerticalDistanceToVertex = (
+        angle = 60,
+        insidePath?: boolean
+    ): number => {
+        return this.getRadius(insidePath) * Math.sin(Geometry.toRadians(angle));
+    };
+
+    getHorizontalDistanceToVertex = (angle = 60, insidePath?: boolean) => {
+        return this.getRadius(insidePath) * Math.cos(Geometry.toRadians(angle));
     };
 
     calculateHorizontalOffsetForColumn = (column: number) => {
         return (
             this.radius * (column + 2) +
-            this.getDistanceToHorizontalVertex() * (column + 1)
+            this.getHorizontalDistanceToVertex() * (column + 1)
         );
     };
 

@@ -1,26 +1,34 @@
 import { IGeometry } from './Geometry';
-import { Hexagon, IHexagon } from './Hexagon';
+import { Hexagon, IHexagon, IValueHexagon, ValueHexagon } from './Hexagon';
 import { IGame } from './Game';
-import { CellCoordinates, HexagonType } from './types';
+import {
+    Axis,
+    CellCoordinates,
+    CellData,
+    Direction,
+    HexagonType,
+} from './types';
 
 export interface IField {
     ctx: CanvasRenderingContext2D;
     initField: () => void;
     forEachFieldHexagon: (callback: (hexagon: IHexagon) => void) => void;
     clearContext: () => void;
-    placeValueHexagon: (coordinates: CellCoordinates, value: number) => void;
+    placeValueHexagon: (coordinates: CellData) => void;
     findHexagonUsingCoordinates: (
         coordinates: CellCoordinates,
         where?: HexagonType
     ) => null | IHexagon;
     moveHexagon: (hexagon: IHexagon, newCenter: CellCoordinates) => void;
-    // drawColumn: (length: number, startCoordinates: StartCoordinates) => void;
+    valueHexagons: IValueHexagon[];
+    removeHexagon: (hexagon: IValueHexagon) => void;
+    redraw: () => void;
 }
 
 export class Field implements IField {
     ctx: CanvasRenderingContext2D;
     _fieldHexagons: IHexagon[] = [];
-    _valueHexagons: IHexagon[] = [];
+    valueHexagons: IValueHexagon[] = [];
 
     _canvasWidth = 4000;
     _canvasHeight = 8000;
@@ -44,6 +52,15 @@ export class Field implements IField {
         this.ctx.fillStyle = 'red';
     }
 
+    goThroughAllField = (axis: Axis, direction: Direction) => {
+        const { gameRadius } = this._game;
+        for (let i = gameRadius; i < gameRadius; i++) {
+            console.log({
+                [axis]: i,
+            } as CellCoordinates);
+        }
+    };
+
     forEachFieldHexagon = (callback: (hexagon: IHexagon) => void) => {
         this._fieldHexagons.forEach((hexagon) => callback(hexagon));
     };
@@ -54,7 +71,7 @@ export class Field implements IField {
     ) => {
         const found = (type === HexagonType.Field
             ? this._fieldHexagons
-            : this._valueHexagons
+            : this.valueHexagons
         ).find(
             ({ cellCoordinates: { z, y, x } }) =>
                 x === coordinates.x &&
@@ -89,10 +106,10 @@ export class Field implements IField {
         }
     };
 
-    placeValueHexagon = (coordinates: CellCoordinates, value: number) => {
+    placeValueHexagon = ({ value, ...coordinates }: CellData) => {
         const relativeRecord = this.findHexagonUsingCoordinates(coordinates);
         if (relativeRecord) {
-            const hexagon = new Hexagon(
+            const hexagon = new ValueHexagon(
                 { ...relativeRecord.center },
                 this,
                 this._geometry,
@@ -101,13 +118,13 @@ export class Field implements IField {
                 value
             );
             hexagon.draw();
-            this._valueHexagons.push(hexagon);
+            this.valueHexagons.push(hexagon);
         }
     };
 
     redraw = () => {
         this._fieldHexagons.forEach((hex) => hex.draw());
-        this._valueHexagons.forEach((hex) => hex.draw());
+        this.valueHexagons.forEach((hex) => hex.draw());
     };
 
     moveHexagon = async (hexagon: IHexagon, newCenter: CellCoordinates) => {
@@ -119,8 +136,8 @@ export class Field implements IField {
             const {
                 center: { x: targetX, y: targetY },
             } = targetHexagon;
-            const stepX = (targetX - hexagon.center.x) / 10;
-            const stepY = (targetY - hexagon.center.y) / 10;
+            const stepX = (targetX - hexagon.center.x) / 15;
+            const stepY = (targetY - hexagon.center.y) / 15;
 
             const drawFunction = () => {
                 this.clearContext();
@@ -167,7 +184,6 @@ export class Field implements IField {
                 }
             };
             window.requestAnimationFrame(drawFunction);
-            hexagon.cellCoordinates = { ...targetHexagon.cellCoordinates };
         });
     };
 
@@ -187,7 +203,7 @@ export class Field implements IField {
         startCoordinates: CellCoordinates
     ): void {
         const {
-            getDistanceToVerticalVertex,
+            getVerticalDistanceToVertex,
             calculateHorizontalOffsetForColumn,
         } = this._geometry;
 
@@ -205,7 +221,7 @@ export class Field implements IField {
                 yOffsetMultiplier = columnIndex - this._game.gameRadius + i * 2;
             }
 
-            const yOffset = yOffsetMultiplier * getDistanceToVerticalVertex();
+            const yOffset = yOffsetMultiplier * getVerticalDistanceToVertex(undefined, false);
 
             // window.requestAnimationFrame(() => {
             const hexagon = new Hexagon(
@@ -236,4 +252,10 @@ export class Field implements IField {
             // }
         }
     }
+
+    removeHexagon = (hexagon: IValueHexagon) => {
+        this.valueHexagons = this.valueHexagons.filter(
+            (hex) => hex !== hexagon
+        );
+    };
 }

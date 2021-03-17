@@ -2,35 +2,42 @@ import { IHexagon } from './Hexagon';
 import {
     Axis,
     CellCoordinates,
+    CellData,
     Direction,
     GameKey,
     MapAxisToDirection,
 } from './types';
-import { keyMap } from './consts';
-
-export type CellData = {
-    x: number;
-    y: number;
-    z: number;
-    value: number;
-    hexagon: IHexagon;
-};
+import { gameKeys, keyMap } from './consts';
+import { IField } from './Field';
 
 export interface IGame {
     data: CellData[];
 
     gameRadius: number;
 
-    moveAlongAxis: (
+    getAxisSideCoordinates: (
         gameKey: GameKey,
-        cellCoordinates: CellCoordinates
+        mainAxisValue: number
     ) => CellCoordinates;
+
+    goThroughAllFields: (
+        gameKey: GameKey,
+        callback: (axisValue: number) => void
+    ) => void;
+    isGameKeyPressed: (key: string) => key is GameKey;
 }
 
 export class Game implements IGame {
-    axes: Axis[] = [Axis.X, Axis.Y, Axis.Z];
+    private _data: CellData[] = [];
 
-    data: CellData[] = [];
+    get data(): CellData[] {
+        return this._data;
+    }
+
+    set data(value: CellData[]) {
+        this._data = value;
+    }
+
 
     constructor(readonly gameRadius: number) {}
 
@@ -38,15 +45,15 @@ export class Game implements IGame {
         return this.gameRadius - 1 - Math.abs(center);
     };
 
-    moveAlongAxis = (
+    isGameKeyPressed = (key: string): key is GameKey => gameKeys.includes(key);
+
+    getAxisSideCoordinates = (
         gameKey: GameKey,
-        cellCoordinates: CellCoordinates
+        mainAxisValue: number
     ): CellCoordinates => {
         const axisToDirection = keyMap[gameKey];
 
         const result = {} as CellCoordinates;
-
-        const mainAxisValue = cellCoordinates[axisToDirection[Direction.NoMove]];
 
         result[axisToDirection[Direction.NoMove]] = mainAxisValue;
 
@@ -65,30 +72,33 @@ export class Game implements IGame {
         }
 
         return result;
+    };
 
-        /*const filtered = this.axes.filter((a) => a !== gameKey);
-        const result = {} as CellCoordinates;
+    goThroughAllFields = (
+        gameKey: GameKey,
+        callback: (axisValue: number) => void
+    ) => {
+        const { gameRadius } = this;
+        const axisToDirection = keyMap[gameKey];
 
-        if (axisValue > 0) {
-            if (direction === Direction.Backward) {
-                result[filtered[0]] = -(this.gameRadius - 1);
-                result[filtered[1]] = this.gameRadius - 1 - Math.abs(axisValue);
-            } else {
-                result[filtered[0]] = -(this.gameRadius - 1 - Math.abs(axisValue));
-                result[filtered[1]] = this.gameRadius - 1;
-            }
-        } else {
-            if (direction === Direction.Backward) {
-                result[filtered[0]] = this.gameRadius - 1;
-                result[filtered[1]] = -(this.gameRadius - 1 - Math.abs(axisValue));
-            } else {
-                result[filtered[0]] = this.gameRadius - 1 - Math.abs(axisValue);
-                result[filtered[1]] = -(this.gameRadius - 1);
+        // for (let i = -gameRadius + 1; i < gameRadius; i++) {
+        //     console.log(2 * gameRadius - Math.abs(i));
+        // }
+        for (let i = -gameRadius + 1; i < gameRadius; i++) {
+            callback(i);
+            const sideCoordinates = this.getAxisSideCoordinates(gameKey, i);
+
+            const lengthOfLine = 2 * gameRadius - Math.abs(i) - 1;
+            let maxOffset = sideCoordinates[axisToDirection[Direction.Forward]];
+            let minOffset = maxOffset - lengthOfLine + 1;
+
+            for (let j = 1; j <= lengthOfLine; j++, maxOffset--, minOffset++) {
+                // callback({
+                //     [axisToDirection[Direction.Forward]]: maxOffset,
+                //     [axisToDirection[Direction.NoMove]]: i,
+                //     [axisToDirection[Direction.Backward]]: minOffset,
+                // } as CellCoordinates);
             }
         }
-
-        result[gameKey] = axisValue;
-
-        return result;*/
     };
 }

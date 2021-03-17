@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/hexogen2048.iml" filepath="$PROJECT_DIR$/.idea/hexogen2048.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../typescript-bootcamp/.idea/typescript-bootcamp.iml" filepath="$PROJECT_DIR$/../typescript-bootcamp/.idea/typescript-bootcamp.iml" />
     </modules>
   </component>
 </project>
