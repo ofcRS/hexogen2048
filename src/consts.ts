@@ -1,6 +1,6 @@
 import { Axis, Direction, GameKey, MapAxisToDirection } from './types';
 
-export const gameKeys: string[] = [
+export const gameKeys: GameKey[] = [
     GameKey.Q,
     GameKey.D,
     GameKey.W,

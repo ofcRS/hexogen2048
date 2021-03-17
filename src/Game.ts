@@ -1,11 +1,10 @@
-import { IHexagon } from './Hexagon';
+import { IValueHexagon } from './Hexagon';
 import {
-    Axis,
     CellCoordinates,
     CellData,
     Direction,
     GameKey,
-    MapAxisToDirection,
+    HexagonType,
 } from './types';
 import { gameKeys, keyMap } from './consts';
 import { IField } from './Field';
@@ -21,10 +20,15 @@ export interface IGame {
     ) => CellCoordinates;
 
     goThroughAllFields: (
-        gameKey: GameKey,
-        callback: (axisValue: number) => void
+        callback: (axisValue: number, index: number) => void
     ) => void;
     isGameKeyPressed: (key: string) => key is GameKey;
+
+    goAlongXAxis: (
+        callback: (length: number, cell: CellCoordinates, index: number) => void
+    ) => void;
+
+    isGameOver: (field: IField) => boolean;
 }
 
 export class Game implements IGame {
@@ -38,14 +42,32 @@ export class Game implements IGame {
         this._data = value;
     }
 
-
     constructor(readonly gameRadius: number) {}
+
+    _goAlongAxis = (
+        gameKey: GameKey,
+        callback: (length: number, cell: CellCoordinates, index: number) => void
+    ) => {
+        this.goThroughAllFields((axisValue, index) => {
+            const columnLength = 2 * this.gameRadius - Math.abs(axisValue) - 1;
+            const sideCoordinates = this.getAxisSideCoordinates(
+                gameKey,
+                axisValue
+            );
+            callback(columnLength, sideCoordinates, index);
+        });
+    };
+
+    goAlongXAxis = (
+        callback: (length: number, cell: CellCoordinates, index: number) => void
+    ) => this._goAlongAxis(GameKey.W, callback);
 
     getSideCoordinates = (center: number) => {
         return this.gameRadius - 1 - Math.abs(center);
     };
 
-    isGameKeyPressed = (key: string): key is GameKey => gameKeys.includes(key);
+    isGameKeyPressed = (key: string): key is GameKey =>
+        gameKeys.includes(key as GameKey);
 
     getAxisSideCoordinates = (
         gameKey: GameKey,
@@ -75,30 +97,61 @@ export class Game implements IGame {
     };
 
     goThroughAllFields = (
-        gameKey: GameKey,
-        callback: (axisValue: number) => void
-    ) => {
+        callback: (axisValue: number, index: number) => void
+    ): void => {
         const { gameRadius } = this;
-        const axisToDirection = keyMap[gameKey];
 
-        // for (let i = -gameRadius + 1; i < gameRadius; i++) {
-        //     console.log(2 * gameRadius - Math.abs(i));
-        // }
-        for (let i = -gameRadius + 1; i < gameRadius; i++) {
-            callback(i);
-            const sideCoordinates = this.getAxisSideCoordinates(gameKey, i);
-
-            const lengthOfLine = 2 * gameRadius - Math.abs(i) - 1;
-            let maxOffset = sideCoordinates[axisToDirection[Direction.Forward]];
-            let minOffset = maxOffset - lengthOfLine + 1;
-
-            for (let j = 1; j <= lengthOfLine; j++, maxOffset--, minOffset++) {
-                // callback({
-                //     [axisToDirection[Direction.Forward]]: maxOffset,
-                //     [axisToDirection[Direction.NoMove]]: i,
-                //     [axisToDirection[Direction.Backward]]: minOffset,
-                // } as CellCoordinates);
-            }
+        for (
+            let axisValue = -gameRadius + 1, i = 0;
+            axisValue < gameRadius;
+            axisValue++, i++
+        ) {
+            callback(axisValue, i);
         }
+    };
+
+    isGameOver = (field: IField): boolean => {
+        if (field.fieldHexagons.length !== field.valueHexagons.length) {
+            return false;
+        }
+        return gameKeys.every((gameKey) => {
+            const axisToDirection = keyMap[gameKey];
+            let hasSameValueNeighbors = false;
+            this._goAlongAxis(gameKey, (length, cell, index) => {
+                const coordinates = { ...cell };
+
+                coordinates[axisToDirection[Direction.Backward]] =
+                    coordinates[axisToDirection[Direction.Forward]] -
+                    length +
+                    1;
+
+                for (
+                    let j = 0;
+                    j < length - 1;
+                    j++,
+                        coordinates[axisToDirection[Direction.Forward]]--,
+                        coordinates[axisToDirection[Direction.Backward]]++
+                ) {
+                    const current = field.findHexagonUsingCoordinates<IValueHexagon>(
+                        coordinates,
+                        HexagonType.Value
+                    );
+                    const nextCoordinates = { ...coordinates };
+
+                    nextCoordinates[axisToDirection[Direction.Forward]]--;
+                    nextCoordinates[axisToDirection[Direction.Backward]]++;
+
+                    const next = field.findHexagonUsingCoordinates<IValueHexagon>(
+                        nextCoordinates,
+                        HexagonType.Value
+                    );
+
+                    if (current?.value === next?.value) {
+                        hasSameValueNeighbors = true;
+                    }
+                }
+            });
+            return !hasSameValueNeighbors;
+        });
     };
 }

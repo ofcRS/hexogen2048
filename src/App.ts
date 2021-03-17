@@ -23,23 +23,23 @@ export class App {
                 const axisToDirection = keyMap[key];
                 this.nowMoving = true;
                 const result: IValueHexagon[] = [];
-                this.game.goThroughAllFields(key, async (axisValue) => {
+                this.game.goThroughAllFields(async (axisValue) => {
                     const lineHexagons = this.field.valueHexagons
                         .filter(
                             (hexagon) =>
                                 hexagon.cellCoordinates[
                                     axisToDirection[Direction.NoMove]
-                                ] === axisValue
+                                    ] === axisValue
                         )
                         .sort((prev, curr) => {
                             const prevValue =
                                 prev.cellCoordinates[
                                     axisToDirection[Direction.Forward]
-                                ];
+                                    ];
                             const currentValue =
                                 curr.cellCoordinates[
                                     axisToDirection[Direction.Forward]
-                                ];
+                                    ];
                             if (prevValue < currentValue) return 1;
                             if (prevValue === currentValue) return 0;
                             return -1;
@@ -58,13 +58,12 @@ export class App {
                         const current = lineHexagons[i];
                         const next = lineHexagons[i + 1];
                         current.cellCoordinates = { ...axisSideCoordinates };
-                        console.log(axisSideCoordinates);
                         axisSideCoordinates[
                             axisToDirection[Direction.Forward]
-                        ] -= 1;
+                            ] -= 1;
                         axisSideCoordinates[
                             axisToDirection[Direction.Backward]
-                        ] += 1;
+                            ] += 1;
                         if (!next || next.value !== current.value) {
                         } else {
                             next.cellCoordinates = {
@@ -79,14 +78,19 @@ export class App {
                 });
                 this.field.valueHexagons = result;
                 await Promise.all(
-                    this.field.valueHexagons.map((hex) => {
-                        return this.field.moveHexagon(hex, hex.cellCoordinates);
-                    })
+                    this.field.valueHexagons.map((hex) =>
+                        this.field.moveHexagon(hex, hex.cellCoordinates)
+                    )
                 );
                 this.game.data = this.field.valueHexagons.map((hexagon) =>
                     hexagon.toCellData()
                 );
                 await this.dataFetcher.getDataFromServer();
+                this.field.updateDomElements();
+                const isGameOver = this.game.isGameOver(this.field);
+                if (isGameOver) {
+                    alert('GG')
+                }
                 this.nowMoving = false;
             }
         });
@@ -94,7 +98,7 @@ export class App {
 
     start = () => {
         this.addButton();
-        this.field.initField();
+        this.field.initField(this.game.goAlongXAxis);
         this.dataFetcher.getDataFromServer();
     };
 }

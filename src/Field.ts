@@ -1,42 +1,51 @@
 import { IGeometry } from './Geometry';
 import { Hexagon, IHexagon, IValueHexagon, ValueHexagon } from './Hexagon';
 import { IGame } from './Game';
-import {
-    Axis,
-    CellCoordinates,
-    CellData,
-    Direction,
-    HexagonType,
-} from './types';
+import { CellCoordinates, CellData, HexagonType } from './types';
 
 export interface IField {
     ctx: CanvasRenderingContext2D;
-    initField: () => void;
+    initField: (
+        getData: (
+            callback: (
+                columnLength: number,
+                cellCoordinates: CellCoordinates,
+                index: number
+            ) => void
+        ) => void
+    ) => void;
     forEachFieldHexagon: (callback: (hexagon: IHexagon) => void) => void;
     clearContext: () => void;
     placeValueHexagon: (coordinates: CellData) => void;
-    findHexagonUsingCoordinates: (
+    findHexagonUsingCoordinates: <T extends IHexagon>(
         coordinates: CellCoordinates,
         where?: HexagonType
-    ) => null | IHexagon;
+    ) => null | T;
     moveHexagon: (hexagon: IHexagon, newCenter: CellCoordinates) => void;
+    fieldHexagons: IHexagon[];
     valueHexagons: IValueHexagon[];
     removeHexagon: (hexagon: IValueHexagon) => void;
     redraw: () => void;
+    updateDomElements: () => void;
 }
 
 export class Field implements IField {
     ctx: CanvasRenderingContext2D;
+
     _fieldHexagons: IHexagon[] = [];
+
+    get fieldHexagons() {
+        return this._fieldHexagons;
+    }
+
     valueHexagons: IValueHexagon[] = [];
 
-    _canvasWidth = 4000;
-    _canvasHeight = 8000;
+    _canvasWidth = 800;
+    _canvasHeight = 600;
 
-    constructor(
-        private readonly _geometry: IGeometry,
-        private readonly _game: IGame
-    ) {
+    _wrapper: HTMLDivElement | null = null;
+
+    constructor(private readonly _geometry: IGeometry) {
         const context = this._createCanvas(
             this._canvasWidth,
             this._canvasHeight
@@ -52,23 +61,14 @@ export class Field implements IField {
         this.ctx.fillStyle = 'red';
     }
 
-    goThroughAllField = (axis: Axis, direction: Direction) => {
-        const { gameRadius } = this._game;
-        for (let i = gameRadius; i < gameRadius; i++) {
-            console.log({
-                [axis]: i,
-            } as CellCoordinates);
-        }
-    };
-
     forEachFieldHexagon = (callback: (hexagon: IHexagon) => void) => {
         this._fieldHexagons.forEach((hexagon) => callback(hexagon));
     };
 
-    findHexagonUsingCoordinates = (
+    findHexagonUsingCoordinates = <T extends IHexagon>(
         coordinates: CellCoordinates,
         type: HexagonType = HexagonType.Field
-    ) => {
+    ): T | null => {
         const found = (type === HexagonType.Field
             ? this._fieldHexagons
             : this.valueHexagons
@@ -78,32 +78,11 @@ export class Field implements IField {
                 y === coordinates.y &&
                 z === coordinates.z
         );
-        return found || null;
+        return (found as T) || null;
     };
 
     clearContext = () => {
         this.ctx.clearRect(0, 0, this._canvasWidth, this._canvasHeight);
-    };
-
-    initField = () => {
-        const { gameRadius } = this._game;
-
-        for (let i = 0; i < gameRadius; i++) {
-            this.drawColumn(i + gameRadius, {
-                x: i - gameRadius + 1,
-                y: gameRadius - 1,
-                z: -i,
-            });
-        }
-        for (let i = 2 * gameRadius; i > gameRadius + 1; i--) {
-            const x = 2 * gameRadius - i + 1;
-            const y = gameRadius - x - 1;
-            this.drawColumn(i - 2, {
-                x,
-                y,
-                z: -gameRadius + 1,
-            });
-        }
     };
 
     placeValueHexagon = ({ value, ...coordinates }: CellData) => {
@@ -113,7 +92,6 @@ export class Field implements IField {
                 { ...relativeRecord.center },
                 this,
                 this._geometry,
-                this._game,
                 coordinates,
                 value
             );
@@ -122,9 +100,19 @@ export class Field implements IField {
         }
     };
 
+    updateDomElements = () => {
+        this.valueHexagons.forEach((hex) => {
+            hex.updateDataset();
+        });
+    };
+
     redraw = () => {
-        this._fieldHexagons.forEach((hex) => hex.draw());
-        this.valueHexagons.forEach((hex) => hex.draw());
+        this.valueHexagons.forEach((hex) => {
+            return hex.draw();
+        });
+        this._fieldHexagons.forEach((hex) => {
+            hex.draw();
+        });
     };
 
     moveHexagon = async (hexagon: IHexagon, newCenter: CellCoordinates) => {
@@ -195,63 +183,70 @@ export class Field implements IField {
         canvas.width = width;
         canvas.height = height;
 
+        const wrapper = document.createElement('div');
+        wrapper.className = 'wrapper';
+        document.body.appendChild(wrapper);
+        this._wrapper = wrapper;
+
         return document.body.appendChild<HTMLCanvasElement>(canvas);
     };
 
-    private drawColumn(
-        length: number,
-        startCoordinates: CellCoordinates
-    ): void {
-        const {
-            getVerticalDistanceToVertex,
-            calculateHorizontalOffsetForColumn,
-        } = this._geometry;
+    initField = (
+        getData: (
+            callback: (
+                columnLength: number,
+                cellCoordinates: CellCoordinates,
+                index: number
+            ) => void
+        ) => void
+    ) => {
+        getData(
+            (
+                length: number,
+                startCoordinates: CellCoordinates,
+                index: number
+            ) => {
+                const {
+                    getVerticalDistanceToVertex,
+                    calculateHorizontalOffsetForColumn,
+                } = this._geometry;
 
-        for (let i = 1; i <= length; i++) {
-            const cellY = startCoordinates.y - i + 1;
-            const cellZ = startCoordinates.z + i - 1;
+                for (let i = 1; i <= length; i++) {
+                    const cellY = startCoordinates.y - i + 1;
+                    const cellZ = startCoordinates.z + i - 1;
 
-            const columnIndex = startCoordinates.x + this._game.gameRadius - 1;
-            const xOffset = calculateHorizontalOffsetForColumn(columnIndex - 1);
+                    const xOffset = calculateHorizontalOffsetForColumn(
+                        index - 1
+                    );
 
-            let yOffsetMultiplier =
-                this._game.gameRadius - columnIndex - 2 + i * 2;
+                    const yOffsetMultiplier =
+                        Math.abs(startCoordinates.x) - 1 + i * 2;
 
-            if (columnIndex >= this._game.gameRadius) {
-                yOffsetMultiplier = columnIndex - this._game.gameRadius + i * 2;
-            }
+                    const yOffset =
+                        yOffsetMultiplier * getVerticalDistanceToVertex();
 
-            const yOffset = yOffsetMultiplier * getVerticalDistanceToVertex(undefined, false);
-
-            // window.requestAnimationFrame(() => {
-            const hexagon = new Hexagon(
-                {
-                    y: yOffset,
-                    x: xOffset,
-                },
-                this,
-                this._geometry,
-                this._game,
-                {
-                    x: startCoordinates.x,
-                    z: cellZ,
-                    y: cellY,
+                    const hexagon = new Hexagon(
+                        {
+                            y: yOffset,
+                            x: xOffset,
+                        },
+                        this,
+                        this._geometry,
+                        {
+                            x: startCoordinates.x,
+                            z: cellZ,
+                            y: cellY,
+                        }
+                    );
+                    hexagon.draw();
+                    if (this._wrapper) {
+                        hexagon.initDomNode(this._wrapper);
+                    }
+                    this._fieldHexagons.push(hexagon);
                 }
-            );
-            hexagon.draw();
-            this._fieldHexagons.push(hexagon);
-
-            // const relativeRecord = this._game.data.find(
-            //     ({ x, y, z }) =>
-            //         startCoordinates.x === x &&
-            //         cellY === y &&
-            //         cellZ === z
-            // );
-            // if (relativeRecord) {
-            //     hexagon.moveTo(Axis.X, 1)
-            // }
-        }
-    }
+            }
+        );
+    };
 
     removeHexagon = (hexagon: IValueHexagon) => {
         this.valueHexagons = this.valueHexagons.filter(

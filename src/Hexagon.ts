@@ -11,6 +11,9 @@ export interface IHexagon {
     cellCoordinates: CellCoordinates;
     center: Center;
     isEqualCoordinates: (coordinates: CellCoordinates) => boolean;
+    getDomNode: () => HTMLDivElement | null;
+    updateDataset: () => void;
+    initDomNode: (wrapper: HTMLDivElement) => void;
 }
 
 export interface IValueHexagon extends IHexagon {
@@ -29,7 +32,6 @@ export class Hexagon implements IHexagon {
         center: Center,
         private readonly _field: IField,
         private readonly _geometry: IGeometry,
-        private readonly _game: IGame,
         readonly cellCoordinates: CellCoordinates,
         value?: number
     ) {
@@ -82,6 +84,31 @@ export class Hexagon implements IHexagon {
         ctx.closePath();
         ctx.stroke();
     };
+
+    initDomNode = (wrapper: HTMLDivElement) => {
+        const { y, z, x } = this.cellCoordinates;
+        const dataNode = document.createElement('div');
+        dataNode.dataset.x = `${x}`;
+        dataNode.dataset.y = `${y}`;
+        dataNode.dataset.z = `${z}`;
+        dataNode.dataset.value = '0';
+        wrapper.appendChild(dataNode);
+    };
+
+    getDomNode = (): HTMLDivElement | null => {
+        const { y, z, x } = this.cellCoordinates;
+        const relativeNode = document.querySelector(
+            `[data-x="${x}"][data-y="${y}"][data-z="${z}"]`
+        );
+        return relativeNode instanceof HTMLDivElement ? relativeNode : null;
+    };
+
+    updateDataset = () => {
+        const relativeNode = this.getDomNode();
+        if (relativeNode) {
+            relativeNode.dataset.value = `${this.value}`;
+        }
+    };
 }
 
 export class ValueHexagon extends Hexagon implements IValueHexagon {
@@ -91,11 +118,10 @@ export class ValueHexagon extends Hexagon implements IValueHexagon {
         center: Center,
         _field: IField,
         _geometry: IGeometry,
-        _game: IGame,
         cellCoordinates: CellCoordinates,
         value: number
     ) {
-        super(center, _field, _geometry, _game, cellCoordinates, value);
+        super(center, _field, _geometry, cellCoordinates, value);
         this.value = value;
     }
 
