@@ -8,6 +8,7 @@ import {
 } from './types';
 import { gameKeys, keyMap } from './consts';
 import { IField } from './Field';
+import { IDataFetcher } from './DataFetcher';
 
 export interface IGame {
     data: CellData[];
@@ -19,7 +20,7 @@ export interface IGame {
         mainAxisValue: number
     ) => CellCoordinates;
 
-    goThroughAllFields: (
+    goThroughField: (
         callback: (axisValue: number, index: number) => void
     ) => void;
     isGameKeyPressed: (key: string) => key is GameKey;
@@ -29,9 +30,15 @@ export interface IGame {
     ) => void;
 
     isGameOver: (field: IField) => boolean;
+    mainEventListener: (
+        event: KeyboardEvent,
+        field: IField,
+        dataFetcher: IDataFetcher
+    ) => void;
 }
 
 export class Game implements IGame {
+    private isTurnProcessing = false;
     private _data: CellData[] = [];
 
     get data(): CellData[] {
@@ -44,11 +51,82 @@ export class Game implements IGame {
 
     constructor(readonly gameRadius: number) {}
 
+    getUpdatedHexagonsLine = (key: GameKey, field: IField): [IValueHexagon[], boolean] => {
+        const axisToDirection = keyMap[key];
+
+        const result: IValueHexagon[] = [];
+
+        let hasChanges = false;
+
+        this.goThroughField((axisValue) => {
+            const lineHexagons = field.getHexagonsSortedAlongAxis(
+                axisValue,
+                axisToDirection
+            );
+
+            const axisSideCoordinates = this.getAxisSideCoordinates(
+                key,
+                axisValue
+            );
+
+            for (let i = 0, limit = lineHexagons.length - 1; i <= limit; i++) {
+                const current = lineHexagons[i];
+                const next = lineHexagons[i + 1];
+
+                if (!current.isEqualCoordinates(axisSideCoordinates)) {
+                    hasChanges = true;
+                }
+                current.cellCoordinates = { ...axisSideCoordinates };
+                axisSideCoordinates[axisToDirection[Direction.Forward]] -= 1;
+                axisSideCoordinates[axisToDirection[Direction.Backward]] += 1;
+                if (next && next.value === current.value) {
+                    next.cellCoordinates = {
+                        ...current.cellCoordinates,
+                    };
+                    lineHexagons.splice(i, 1);
+                    next.value *= 2;
+                    limit--;
+
+                    hasChanges = true;
+                }
+            }
+            result.push(...lineHexagons);
+        });
+        return [result, hasChanges];
+    };
+
+    mainEventListener = async (
+        { key }: KeyboardEvent,
+        field: IField,
+        dataFetcher: IDataFetcher
+    ) => {
+        if (this.isGameKeyPressed(key) && !this.isTurnProcessing) {
+            try {
+                this.isTurnProcessing = true;
+                const [result, hasChanges] = this.getUpdatedHexagonsLine(key, field);
+                console.log('[Has changes] = ', hasChanges);
+                if (!hasChanges) return;
+                field.valueHexagons = result;
+                await field.updateHexagonsPosition();
+                this.data = field.valueHexagons.map((hexagon) =>
+                    hexagon.toCellData()
+                );
+                await dataFetcher.getDataFromServer();
+                field.updateDomElements();
+                const isGameOver = this.isGameOver(field);
+            } catch (error) {
+                console.error({ error });
+            } finally {
+                this.isTurnProcessing = false;
+            }
+        }
+    };
+
     _goAlongAxis = (
         gameKey: GameKey,
         callback: (length: number, cell: CellCoordinates, index: number) => void
     ) => {
-        this.goThroughAllFields((axisValue, index) => {
+        this.goThroughField((axisValue, index) => {
             const columnLength = 2 * this.gameRadius - Math.abs(axisValue) - 1;
             const sideCoordinates = this.getAxisSideCoordinates(
                 gameKey,
@@ -96,7 +174,7 @@ export class Game implements IGame {
         return result;
     };
 
-    goThroughAllFields = (
+    goThroughField = (
         callback: (axisValue: number, index: number) => void
     ): void => {
         const { gameRadius } = this;

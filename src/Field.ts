@@ -1,7 +1,13 @@
 import { IGeometry } from './Geometry';
 import { Hexagon, IHexagon, IValueHexagon, ValueHexagon } from './Hexagon';
 import { IGame } from './Game';
-import { CellCoordinates, CellData, HexagonType } from './types';
+import {
+    CellCoordinates,
+    CellData,
+    Direction,
+    HexagonType,
+    MapAxisToDirection,
+} from './types';
 
 export interface IField {
     ctx: CanvasRenderingContext2D;
@@ -27,6 +33,11 @@ export interface IField {
     removeHexagon: (hexagon: IValueHexagon) => void;
     redraw: () => void;
     updateDomElements: () => void;
+    getHexagonsSortedAlongAxis: (
+        axisValue: number,
+        axisToDirection: MapAxisToDirection
+    ) => IValueHexagon[];
+    updateHexagonsPosition: () => Promise<unknown[]>;
 }
 
 export class Field implements IField {
@@ -200,57 +211,79 @@ export class Field implements IField {
             ) => void
         ) => void
     ) => {
-        getData(
-            (
-                length: number,
-                startCoordinates: CellCoordinates,
-                index: number
-            ) => {
-                const {
-                    getVerticalDistanceToVertex,
-                    calculateHorizontalOffsetForColumn,
-                } = this._geometry;
+        getData((length, startCoordinates, index) => {
+            const {
+                getVerticalDistanceToVertex,
+                calculateHorizontalOffsetForColumn,
+            } = this._geometry;
 
-                for (let i = 1; i <= length; i++) {
-                    const cellY = startCoordinates.y - i + 1;
-                    const cellZ = startCoordinates.z + i - 1;
+            for (let i = 1; i <= length; i++) {
+                const cellY = startCoordinates.y - i + 1;
+                const cellZ = startCoordinates.z + i - 1;
 
-                    const xOffset = calculateHorizontalOffsetForColumn(
-                        index - 1
-                    );
+                const xOffset = calculateHorizontalOffsetForColumn(index - 1);
 
-                    const yOffsetMultiplier =
-                        Math.abs(startCoordinates.x) - 1 + i * 2;
+                const yOffsetMultiplier =
+                    Math.abs(startCoordinates.x) - 1 + i * 2;
 
-                    const yOffset =
-                        yOffsetMultiplier * getVerticalDistanceToVertex();
+                const yOffset =
+                    yOffsetMultiplier * getVerticalDistanceToVertex();
 
-                    const hexagon = new Hexagon(
-                        {
-                            y: yOffset,
-                            x: xOffset,
-                        },
-                        this,
-                        this._geometry,
-                        {
-                            x: startCoordinates.x,
-                            z: cellZ,
-                            y: cellY,
-                        }
-                    );
-                    hexagon.draw();
-                    if (this._wrapper) {
-                        hexagon.initDomNode(this._wrapper);
+                const hexagon = new Hexagon(
+                    {
+                        y: yOffset,
+                        x: xOffset,
+                    },
+                    this,
+                    this._geometry,
+                    {
+                        x: startCoordinates.x,
+                        z: cellZ,
+                        y: cellY,
                     }
-                    this._fieldHexagons.push(hexagon);
+                );
+                hexagon.draw();
+                if (this._wrapper) {
+                    hexagon.initDomNode(this._wrapper);
                 }
+                this._fieldHexagons.push(hexagon);
             }
-        );
+        });
     };
 
     removeHexagon = (hexagon: IValueHexagon) => {
         this.valueHexagons = this.valueHexagons.filter(
             (hex) => hex !== hexagon
+        );
+    };
+
+    getHexagonsSortedAlongAxis = (
+        axisValue: number,
+        axisToDirection: MapAxisToDirection
+    ): IValueHexagon[] => {
+        return this.valueHexagons
+            .filter(
+                (hexagon) =>
+                    hexagon.cellCoordinates[
+                        axisToDirection[Direction.NoMove]
+                    ] === axisValue
+            )
+            .sort((prev, curr) => {
+                const prevValue =
+                    prev.cellCoordinates[axisToDirection[Direction.Forward]];
+                const currentValue =
+                    curr.cellCoordinates[axisToDirection[Direction.Forward]];
+                if (prevValue < currentValue) return 1;
+                if (prevValue === currentValue) return 0;
+                return -1;
+            });
+    };
+
+    updateHexagonsPosition = (): Promise<unknown[]> => {
+        return Promise.all(
+            this.valueHexagons.map((hex) =>
+                this.moveHexagon(hex, hex.cellCoordinates)
+            )
         );
     };
 }
