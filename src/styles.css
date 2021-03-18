@@ -1,38 +1,40 @@
-.test {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  z-index: 100;
+html * {
+    font-family: sans-serif;
+    box-sizing: border-box;
 }
 
-.field {
-  width: 320px;
-  height: 320px;
+.app-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
 
-  display: flex;
-  position: fixed;
-  left: 50%;
-  top: 50%;
+    width: 1600px;
+    margin: 0 auto;
 }
 
-.cell {
-  position: absolute;
-  width: 80px;
-  height: 80px;
+.controls-wrapper {
+    display: flex;
+    align-items: center;
+    background: #f25f5c;
+    width: 100%;
+    padding: 32px;
 }
 
-.cell svg {
-  width: 100%;
-  height: 100%;
+.controls-wrapper > :not(:last-child) {
+  margin-right: 16px;
 }
 
-.cell:hover svg polygon {
-  fill: blue;
-  transition: all 0.2s;
+.controls-wrapper select {
+    padding: 16px;
+    font-size: 21px;
 }
 
-.cell:hover svg text {
-  fIll: red;
-  transition: all 0.2s;
+.controls-wrapper input {
+    padding: 16px;
 }
 
+.controls-wrapper button {
+  padding: 16px;
+}
+
+/*'#f25f5c', '#ffe066', '#247ba0', '#70c1b3'],*/

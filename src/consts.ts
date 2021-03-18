@@ -1,4 +1,34 @@
-import { Axis, Direction, GameKey, MapAxisToDirection } from './types';
+import {
+    Axis,
+    Direction,
+    GameKey,
+    GraphicType,
+    MapAxisToDirection,
+} from './types';
+
+export const graphicTypes = [
+    {
+        title: 'Canvas',
+        type: GraphicType.CANVAS,
+    },
+    {
+        title: 'HTMLELEMENTS',
+        type: GraphicType.HTMLELEMENTS,
+    },
+] as const;
+
+export const serverUrls = [
+    {
+        id: 'remote',
+        value: '//68f02c80-3bed-4e10-a747-4ff774ae905a.pub.instances.scw.cloud',
+        title: 'Remote server',
+    },
+    {
+        id: 'localhost',
+        value: 'http://localhost:13337',
+        title: 'Local server',
+    },
+] as const;
 
 export const gameKeys: GameKey[] = [
     GameKey.Q,

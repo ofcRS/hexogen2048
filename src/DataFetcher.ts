@@ -1,6 +1,6 @@
 import { IGame } from './Game';
 import { Field, IField } from './Field';
-import { CellData } from './types';
+import { CellData, GameStatus } from './types';
 
 export interface IDataFetcher {
     serverUrl: string;
@@ -35,6 +35,7 @@ export class DataFetcher implements IDataFetcher {
         ).then((res) => res.json());
         if (data) {
             data.forEach((cellData) => this._field.placeValueHexagon(cellData));
+            this._game.updateGameStatus(this._field);
         }
     };
 }

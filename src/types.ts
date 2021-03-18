@@ -7,7 +7,7 @@ export enum Axis {
 export enum Direction {
     Forward,
     Backward,
-    NoMove
+    NoMove,
 }
 
 export type CellCoordinates = {
@@ -18,14 +18,14 @@ export type CellCoordinates = {
 
 export type CellData = CellCoordinates & {
     value: number;
-}
+};
 
 export enum HexagonType {
     Field,
     Value,
 }
 
-export type MapAxisToDirection = Record<Direction, Axis>
+export type MapAxisToDirection = Record<Direction, Axis>;
 
 export enum GameKey {
     Q = 'q',
@@ -34,4 +34,14 @@ export enum GameKey {
     S = 's',
     E = 'e',
     A = 'a',
+}
+
+export enum GameStatus {
+    PLAYING = 'playing',
+    OVER = 'game-over',
+}
+
+export enum GraphicType {
+    CANVAS = 'canvas',
+    HTMLELEMENTS = 'htmlElements'
 }

@@ -1,10 +1,11 @@
 import { IGeometry } from './Geometry';
 import { Hexagon, IHexagon, IValueHexagon, ValueHexagon } from './Hexagon';
-import { IGame } from './Game';
+import { Game, IGame } from './Game';
 import {
     CellCoordinates,
     CellData,
     Direction,
+    GameStatus,
     HexagonType,
     MapAxisToDirection,
 } from './types';
@@ -38,6 +39,7 @@ export interface IField {
         axisToDirection: MapAxisToDirection
     ) => IValueHexagon[];
     updateHexagonsPosition: () => Promise<unknown[]>;
+    updateGameStatusNode: (status: GameStatus) => void;
 }
 
 export class Field implements IField {
@@ -51,12 +53,15 @@ export class Field implements IField {
 
     valueHexagons: IValueHexagon[] = [];
 
-    _canvasWidth = 800;
-    _canvasHeight = 600;
-
     _wrapper: HTMLDivElement | null = null;
+    _gameStatusNode: HTMLDivElement | null = null;
 
-    constructor(private readonly _geometry: IGeometry) {
+    constructor(
+        private readonly _geometry: IGeometry,
+        private readonly _appWrapper: HTMLElement,
+        private _canvasWidth: number,
+        private _canvasHeight: number
+    ) {
         const context = this._createCanvas(
             this._canvasWidth,
             this._canvasHeight
@@ -64,6 +69,7 @@ export class Field implements IField {
         if (!context) {
             throw new Error('ctx is not available');
         }
+        this._initUtilitiesDomNodes();
         this.ctx = context;
         this.ctx.lineWidth = 1;
         this.ctx.textAlign = 'center';
@@ -190,16 +196,40 @@ export class Field implements IField {
         width: number,
         height: number
     ): HTMLCanvasElement => {
-        const canvas = document.createElement('canvas');
+        let canvas = document.querySelector('canvas');
+        if (!canvas) {
+            canvas = document.createElement('canvas');
+        }
         canvas.width = width;
         canvas.height = height;
 
-        const wrapper = document.createElement('div');
-        wrapper.className = 'wrapper';
-        document.body.appendChild(wrapper);
-        this._wrapper = wrapper;
+        return this._appWrapper.appendChild<HTMLCanvasElement>(canvas);
+    };
 
-        return document.body.appendChild<HTMLCanvasElement>(canvas);
+    private _getNodeUtilityNode = (id: string): HTMLDivElement => {
+        let result = document.querySelector<HTMLDivElement>('#' + id);
+        if (!result) {
+            result = document.createElement('div');
+            result.id = id;
+            this._appWrapper.appendChild(result);
+        }
+        return result;
+    };
+
+    private _initUtilitiesDomNodes = () => {
+        this._wrapper = this._getNodeUtilityNode('wrapper');
+
+        const gameStatus = this._getNodeUtilityNode('status');
+        gameStatus.dataset.status = GameStatus.PLAYING;
+        gameStatus.innerText = GameStatus.PLAYING;
+        this._gameStatusNode = gameStatus;
+    };
+
+    updateGameStatusNode = (status: GameStatus) => {
+        if (this._gameStatusNode) {
+            this._gameStatusNode.innerText = status;
+            this._gameStatusNode.dataset.status = status;
+        }
     };
 
     initField = (
