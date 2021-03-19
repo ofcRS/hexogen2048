@@ -1,25 +1,29 @@
-import { Geometry } from './Geometry';
-import { Field, IField } from './Field';
-import { Game, IGame } from './Game';
-import { serverUrls } from './consts';
-import { DataFetcher, IDataFetcher } from './DataFetcher';
+import { Geometry } from "./Geometry";
+import { Game, IGame } from "./Game";
+import { graphicTypes, serverUrls } from "./consts";
+import { DataFetcher, IDataFetcher } from "./DataFetcher";
 
-import styles from './styles.css';
+import styles from "./styles.css";
+import { GameStatus, GraphicType } from "./types";
+import { CanvasField } from "./CanvasField";
+import { SVGField } from "./SVGField";
 
 export class App {
-    private _field: IField;
+    private _field: CanvasField | SVGField;
     private _game: IGame;
     private _dataFetcher: IDataFetcher;
 
     private _appWrapper: HTMLElement;
-    protected _controlsWrapper: HTMLDivElement;
+    private _controlsWrapper: HTMLDivElement;
+
+    private _gameStatusNode: HTMLDivElement;
 
     private readonly CELL_SIZE = 75;
 
     initEventListener = () => {
-        window.addEventListener('keypress', (event) =>
-            this._game.mainEventListener(event, this._field, this._dataFetcher)
-        );
+        window.addEventListener('keypress', (event) => {
+            this._game.mainEventListener(event, this._field, this._dataFetcher);
+        });
     };
 
     getGameRadius = () => {
@@ -35,22 +39,26 @@ export class App {
         return radius;
     };
 
-    startGame = (url: string) => {
-        const geometry = new Geometry(75);
+    startGame = (url: string, graphicType: GraphicType) => {
+        const geometry = new Geometry(100);
 
         const gameRadius = this.getGameRadius();
+
+        this._updateGameStatusNode(GameStatus.PLAYING);
 
         const canvasSize =
             geometry.getVerticalDistanceToVertex() * 2 * (gameRadius * 2 - 1);
 
-        this._field = new Field(
-            geometry,
-            this._appWrapper,
-            canvasSize,
-            canvasSize
-        );
+        this._field?.removePreviousStuff();
 
-        this._game = new Game(gameRadius);
+        this._field =
+            graphicType === GraphicType.CANVAS
+                ? new CanvasField(geometry, this._appWrapper, canvasSize)
+                : new SVGField(geometry, this._appWrapper);
+
+        this._game = new Game(gameRadius, () =>
+            this._updateGameStatusNode(GameStatus.OVER)
+        );
         this._dataFetcher = new DataFetcher(this._game, this._field, url);
 
         this._field.initField(this._game.goAlongXAxis);
@@ -65,11 +73,35 @@ export class App {
         this._controlsWrapper = controlsWrapper;
     };
 
+    _updateGameStatusNode = (status: GameStatus) => {
+        this._gameStatusNode.innerText = status;
+        this._gameStatusNode.dataset.status = status;
+    };
+
     createUtilityControls = () => {
+        const gameStatus = document.createElement('div');
+
+        gameStatus.className = styles.gameStatus;
+        this._controlsWrapper.appendChild(gameStatus);
+        this._gameStatusNode = gameStatus;
+        this._updateGameStatusNode(GameStatus.PLAYING);
+
+        const graphicTypesSelect = document.createElement('select');
+        graphicTypes.forEach(({ title, type }) => {
+            const option = document.createElement('option');
+            option.value = type;
+            option.innerText = title;
+
+            graphicTypesSelect.appendChild(option);
+        });
+
         const select = document.createElement('select');
         select.addEventListener('change', ({ target }) => {
             if (target instanceof HTMLSelectElement) {
-                this.startGame(target.value);
+                this.startGame(
+                    target.value,
+                    graphicTypesSelect.value as GraphicType
+                );
             }
         });
         select.id = 'url-server';
@@ -84,6 +116,8 @@ export class App {
 
         this._controlsWrapper.appendChild(select);
 
+        this._controlsWrapper.appendChild(graphicTypesSelect);
+
         const gameRadiusInput = document.createElement('input');
         gameRadiusInput.value = '2';
         gameRadiusInput.type = 'number';
@@ -93,9 +127,12 @@ export class App {
         submitGameRadius.addEventListener('click', () => {
             const parsedValue = parseInt(gameRadiusInput.value);
             document.location.hash = 'test' + parsedValue;
-            this.startGame(select.value);
+            this.startGame(
+                select.value,
+                graphicTypesSelect.value as GraphicType
+            );
         });
-        submitGameRadius.innerHTML = 'submit';
+        submitGameRadius.innerHTML = 'Submit';
         this._controlsWrapper.appendChild(submitGameRadius);
     };
 
@@ -109,6 +146,6 @@ export class App {
 
         this.createUtilityControls();
 
-        this.startGame(serverUrls[0].value);
+        this.startGame(serverUrls[0].value, graphicTypes[0].type);
     };
 }

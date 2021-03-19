@@ -1,4 +1,3 @@
-import { IValueHexagon } from './Hexagon';
 import {
     CellCoordinates,
     CellData,
@@ -8,8 +7,9 @@ import {
     HexagonType,
 } from './types';
 import { gameKeys, keyMap } from './consts';
-import { IField } from './Field';
 import { IDataFetcher } from './DataFetcher';
+import { IBaseField } from './IField';
+import { IBaseValueHexagon, IValueCanvasHexagon } from './IHexagon';
 
 export interface IGame {
     data: CellData[];
@@ -31,10 +31,10 @@ export interface IGame {
         callback: (length: number, cell: CellCoordinates, index: number) => void
     ) => void;
 
-    updateGameStatus: (field: IField) => void;
+    updateGameStatus: (field: IBaseField) => void;
     mainEventListener: (
         event: KeyboardEvent,
-        field: IField,
+        field: IBaseField,
         dataFetcher: IDataFetcher
     ) => void;
 }
@@ -52,15 +52,15 @@ export class Game implements IGame {
         this._data = value;
     }
 
-    constructor(readonly gameRadius: number) {}
+    constructor(readonly gameRadius: number, private _onGameOver: () => void) {}
 
     getUpdatedHexagonsLine = (
         key: GameKey,
-        field: IField
-    ): [IValueHexagon[], boolean] => {
+        field: IBaseField
+    ): [IBaseValueHexagon[], boolean] => {
         const axisToDirection = keyMap[key];
 
-        const result: IValueHexagon[] = [];
+        const result: IBaseValueHexagon[] = [];
 
         let hasChanges = false;
 
@@ -103,7 +103,7 @@ export class Game implements IGame {
 
     mainEventListener = async (
         { key }: KeyboardEvent,
-        field: IField,
+        field: IBaseField,
         dataFetcher: IDataFetcher
     ) => {
         if (this.isGameKeyPressed(key) && !this.isTurnProcessing) {
@@ -115,13 +115,12 @@ export class Game implements IGame {
                 );
 
                 if (hasChanges) {
-                    field.valueHexagons = result;
-                    await field.updateHexagonsPosition();
+                    await field.updateHexagonsPosition(result);
                     this.data = field.valueHexagons.map((hexagon) =>
                         hexagon.toCellData()
                     );
                     await dataFetcher.getDataFromServer();
-                    field.updateDomElements();
+                    // field.updateDomElements();
                 }
             } catch (error) {
                 console.error({ error });
@@ -197,7 +196,7 @@ export class Game implements IGame {
         }
     };
 
-    updateGameStatus = (field: IField): void => {
+    updateGameStatus = (field: IBaseField): void => {
         if (field.fieldHexagons.length !== field.valueHexagons.length) {
             return;
         }
@@ -219,7 +218,7 @@ export class Game implements IGame {
                         coordinates[axisToDirection[Direction.Forward]]--,
                         coordinates[axisToDirection[Direction.Backward]]++
                 ) {
-                    const current = field.findHexagonUsingCoordinates<IValueHexagon>(
+                    const current = field.findHexagonUsingCoordinates<IValueCanvasHexagon>(
                         coordinates,
                         HexagonType.Value
                     );
@@ -228,7 +227,7 @@ export class Game implements IGame {
                     nextCoordinates[axisToDirection[Direction.Forward]]--;
                     nextCoordinates[axisToDirection[Direction.Backward]]++;
 
-                    const next = field.findHexagonUsingCoordinates<IValueHexagon>(
+                    const next = field.findHexagonUsingCoordinates<IValueCanvasHexagon>(
                         nextCoordinates,
                         HexagonType.Value
                     );
@@ -241,7 +240,7 @@ export class Game implements IGame {
             return !hasSameValueNeighbors;
         });
         if (isGameOver) {
-            field.updateGameStatusNode(GameStatus.OVER);
+            this._onGameOver()
         }
     };
 }

@@ -21,7 +21,7 @@ html * {
 }
 
 .controls-wrapper > :not(:last-child) {
-  margin-right: 16px;
+    margin-right: 16px;
 }
 
 .controls-wrapper select {
@@ -34,7 +34,19 @@ html * {
 }
 
 .controls-wrapper button {
-  padding: 16px;
+    padding: 16px;
+}
+
+.hexagons-wrapper {
+    position: relative;
+
+    width: 100%;
+
+}
+
+.game-status {
+    font-size: 32px;
+    color: #fff;
 }
 
 /*'#f25f5c', '#ffe066', '#247ba0', '#70c1b3'],*/

@@ -43,5 +43,20 @@ export enum GameStatus {
 
 export enum GraphicType {
     CANVAS = 'canvas',
-    HTMLELEMENTS = 'htmlElements'
+    HTMLELEMENTS = 'htmlElements',
 }
+
+export type Center = { x: number; y: number };
+
+export type GetData = (
+    callback: (
+        columnLength: number,
+        cellCoordinates: CellCoordinates,
+        index: number
+    ) => void
+) => void;
+
+export type Offset = {
+    xOffset: number;
+    yOffset: number;
+};

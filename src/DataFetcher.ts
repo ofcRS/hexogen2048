@@ -1,6 +1,7 @@
 import { IGame } from './Game';
-import { Field, IField } from './Field';
 import { CellData, GameStatus } from './types';
+import { IBaseField, ICanvasField } from "./IField";
+import { CanvasField } from "./CanvasField";
 
 export interface IDataFetcher {
     serverUrl: string;
@@ -12,7 +13,7 @@ export class DataFetcher implements IDataFetcher {
 
     constructor(
         private readonly _game: IGame,
-        private readonly _field: IField,
+        private readonly _field: IBaseField,
         serverUrl: string
     ) {
         this.serverUrl = serverUrl;

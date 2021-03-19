@@ -12,7 +12,7 @@ export const graphicTypes = [
         type: GraphicType.CANVAS,
     },
     {
-        title: 'HTMLELEMENTS',
+        title: 'HTML Elements',
         type: GraphicType.HTMLELEMENTS,
     },
 ] as const;

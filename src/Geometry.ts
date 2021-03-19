@@ -36,7 +36,7 @@ export class Geometry implements IGeometry {
 
     calculateHorizontalOffsetForColumn = (column: number) => {
         return (
-            this.radius * (column + 2) +
+                this.radius * (column + 2) +
             this.getHorizontalDistanceToVertex() * (column + 1)
         );
     };
