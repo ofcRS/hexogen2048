@@ -1,12 +1,12 @@
-import { Geometry } from "./Geometry";
-import { Game, IGame } from "./Game";
-import { graphicTypes, serverUrls } from "./consts";
-import { DataFetcher, IDataFetcher } from "./DataFetcher";
+import { Geometry } from './Geometry';
+import { Game, IGame } from './Game';
+import { graphicTypes, serverUrls } from './consts';
+import { DataFetcher, IDataFetcher } from './DataFetcher';
 
-import styles from "./styles.css";
-import { GameStatus, GraphicType } from "./types";
-import { CanvasField } from "./CanvasField";
-import { SVGField } from "./SVGField";
+import styles from './styles.css';
+import { GameStatus, GraphicType } from './types';
+import { CanvasField } from './CanvasField';
+import { SVGField } from './SVGField';
 
 export class App {
     private _field: CanvasField | SVGField;
@@ -87,6 +87,8 @@ export class App {
         this._updateGameStatusNode(GameStatus.PLAYING);
 
         const graphicTypesSelect = document.createElement('select');
+        const serverSelect = document.createElement('select');
+
         graphicTypes.forEach(({ title, type }) => {
             const option = document.createElement('option');
             option.value = type;
@@ -94,9 +96,16 @@ export class App {
 
             graphicTypesSelect.appendChild(option);
         });
+        serverUrls.forEach(({ value, id, title }) => {
+            const option = document.createElement('option');
+            option.id = id;
+            option.value = value;
+            option.innerText = title;
 
-        const select = document.createElement('select');
-        select.addEventListener('change', ({ target }) => {
+            serverSelect.appendChild(option);
+        });
+
+        serverSelect.addEventListener('change', ({ target }) => {
             if (target instanceof HTMLSelectElement) {
                 this.startGame(
                     target.value,
@@ -104,17 +113,14 @@ export class App {
                 );
             }
         });
-        select.id = 'url-server';
-        serverUrls.forEach(({ value, id, title }) => {
-            const option = document.createElement('option');
-            option.id = id;
-            option.value = value;
-            option.innerText = title;
-
-            select.appendChild(option);
+        graphicTypesSelect.addEventListener('change', ({ target }) => {
+            if (target instanceof HTMLSelectElement) {
+                this.startGame(serverSelect.value, target.value as GraphicType);
+            }
         });
+        serverSelect.id = 'url-server';
 
-        this._controlsWrapper.appendChild(select);
+        this._controlsWrapper.appendChild(serverSelect);
 
         this._controlsWrapper.appendChild(graphicTypesSelect);
 
@@ -128,7 +134,7 @@ export class App {
             const parsedValue = parseInt(gameRadiusInput.value);
             document.location.hash = 'test' + parsedValue;
             this.startGame(
-                select.value,
+                serverSelect.value,
                 graphicTypesSelect.value as GraphicType
             );
         });

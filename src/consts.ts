@@ -8,12 +8,12 @@ import {
 
 export const graphicTypes = [
     {
-        title: 'Canvas',
-        type: GraphicType.CANVAS,
+        title: 'SVG Elements',
+        type: GraphicType.SVGELEMENTS,
     },
     {
-        title: 'HTML Elements',
-        type: GraphicType.HTMLELEMENTS,
+        title: 'Canvas',
+        type: GraphicType.CANVAS,
     },
 ] as const;
 
