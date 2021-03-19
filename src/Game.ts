@@ -120,7 +120,7 @@ export class Game implements IGame {
                         hexagon.toCellData()
                     );
                     await dataFetcher.getDataFromServer();
-                    // field.updateDomElements();
+                    field.updateDomElements?.();
                 }
             } catch (error) {
                 console.error({ error });

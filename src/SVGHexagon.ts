@@ -33,7 +33,9 @@ export class SVGHexagon extends BaseHexagon implements ISVGHexagon {
 
         const joinedPoints = points.join(' ');
 
-        const text = this.value && `<text fill="#fff" font-size="32px">${this.value}</text>`;
+        const text =
+            this.value &&
+            `<text fill="#fff" font-size="32px">${this.value}</text>`;
 
         return `<polygon stroke="red" fill="${
             this.value ? '#f25f5c' : '#fff'
@@ -60,8 +62,21 @@ export class SVGHexagon extends BaseHexagon implements ISVGHexagon {
         svg.innerHTML = this.getHexagonBody();
 
         this.svg = svg;
-
+        this.updateDataset();
         return svg;
+    };
+
+    updateDataset = () => {
+        this.svg.dataset.value = `${this.value || 0}`;
+        this.svg.dataset.x = `${this.cellCoordinates.x}`;
+        this.svg.dataset.y = `${this.cellCoordinates.y}`;
+        this.svg.dataset.z = `${this.cellCoordinates.z}`;
+    };
+
+    cleanDataset = () => {
+        ['x', 'y', 'z', 'value'].forEach((atr) => {
+            this.svg.removeAttribute('data-' + atr);
+        });
     };
 
     update = () => {

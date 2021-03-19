@@ -10,14 +10,18 @@ import {
     MapAxisToDirection,
 } from './types';
 import { BaseField } from './BaseField';
-import { ICanvasHexagon, IValueCanvasHexagon } from './IHexagon';
+import {
+    ICanvasHexagon,
+    IValueCanvasHexagon,
+    IValueSVGHexagon,
+} from './IHexagon';
 
 export class CanvasField extends BaseField implements ICanvasField {
     ctx: CanvasRenderingContext2D;
 
     valueHexagons: IValueCanvasHexagon[] = [];
 
-    _wrapper: HTMLDivElement = null;
+    _wrapper: HTMLDivElement;
 
     constructor(
         _geometry: IGeometry,
@@ -38,16 +42,11 @@ export class CanvasField extends BaseField implements ICanvasField {
         const canvas = document.querySelector('canvas');
 
         canvas?.remove();
+        this._wrapper?.remove();
     };
 
     clearContext = () => {
         this.ctx.clearRect(0, 0, this._canvasSize, this._canvasSize);
-    };
-
-    updateDomElements = () => {
-        this.valueHexagons.forEach((hex) => {
-            hex.updateDataset();
-        });
     };
 
     redraw = () => {
@@ -173,12 +172,10 @@ export class CanvasField extends BaseField implements ICanvasField {
                 },
                 this,
                 this._geometry,
-                cellCoordinates
+                cellCoordinates,
+                this._wrapper
             );
             hexagon.draw();
-            if (this._wrapper) {
-                hexagon.initDomNode(this._wrapper);
-            }
             this.fieldHexagons.push(hexagon);
         });
     };
@@ -191,6 +188,7 @@ export class CanvasField extends BaseField implements ICanvasField {
                 this,
                 this._geometry,
                 coordinates,
+                this._wrapper,
                 value
             );
             hexagon.draw();
@@ -202,7 +200,6 @@ export class CanvasField extends BaseField implements ICanvasField {
         hexagons: IValueCanvasHexagon[]
     ): Promise<unknown> => {
         this.valueHexagons = hexagons;
-        this.updateDomElements();
         return Promise.all(
             this.valueHexagons.map((hex) =>
                 this.moveHexagon(hex, hex.cellCoordinates)

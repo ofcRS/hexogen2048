@@ -43,7 +43,7 @@ export enum GameStatus {
 
 export enum GraphicType {
     CANVAS = 'canvas',
-    HTMLELEMENTS = 'htmlElements',
+    SVGELEMENTS = 'svgElements',
 }
 
 export type Center = { x: number; y: number };

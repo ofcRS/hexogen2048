@@ -51,6 +51,7 @@ export interface IBaseField<
 
     updateHexagonsPosition: (hexagons: ValueHexagon[]) => Promise<unknown | void>;
     moveHexagon: (hexagon: ValueHexagon, newCenter: CellCoordinates) => void;
+    updateDomElements: () => void;
 }
 
 export interface ICanvasField
@@ -58,7 +59,6 @@ export interface ICanvasField
     ctx: CanvasRenderingContext2D;
     clearContext: () => void;
     redraw: () => void;
-    updateDomElements: () => void;
 }
 
 export interface ISVGField

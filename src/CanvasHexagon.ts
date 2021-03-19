@@ -12,6 +12,7 @@ export class CanvasHexagon extends BaseHexagon implements ICanvasHexagon {
         private readonly _field: ICanvasField,
         geometry: IGeometry,
         readonly cellCoordinates: CellCoordinates,
+        readonly _wrapper: HTMLDivElement,
         value?: number
     ) {
         super(geometry, value);
@@ -41,14 +42,14 @@ export class CanvasHexagon extends BaseHexagon implements ICanvasHexagon {
         ctx.fillText(`${this.value || ''}`, x, y);
     };
 
-    initDomNode = (wrapper: HTMLDivElement) => {
+    initDomNode = () => {
         const { y, z, x } = this.cellCoordinates;
         const dataNode = document.createElement('div');
         dataNode.dataset.x = `${x}`;
         dataNode.dataset.y = `${y}`;
         dataNode.dataset.z = `${z}`;
         dataNode.dataset.value = '0';
-        wrapper.appendChild(dataNode);
+        this._wrapper.appendChild(dataNode);
     };
 
     getDomNode = (): HTMLDivElement | null => {
@@ -64,7 +65,7 @@ export class CanvasHexagon extends BaseHexagon implements ICanvasHexagon {
         if (relativeNode) {
             relativeNode.dataset.value = `${this.value}`;
         }
-    };
+    }
 }
 
 export class ValueHexagon extends CanvasHexagon implements IValueCanvasHexagon {
@@ -75,9 +76,10 @@ export class ValueHexagon extends CanvasHexagon implements IValueCanvasHexagon {
         _field: ICanvasField,
         _geometry: IGeometry,
         cellCoordinates: CellCoordinates,
+        wrapper: HTMLDivElement,
         value: number
     ) {
-        super(center, _field, _geometry, cellCoordinates, value);
+        super(center, _field, _geometry, cellCoordinates, wrapper, value);
     }
 
     toCellData = (): CellData => {

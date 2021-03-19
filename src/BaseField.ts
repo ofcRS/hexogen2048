@@ -13,8 +13,8 @@ import {
     IBaseHexagon,
     IBaseValueHexagon,
     ICanvasHexagon,
-    IValueCanvasHexagon,
-} from './IHexagon';
+    IValueCanvasHexagon, IValueSVGHexagon,
+} from "./IHexagon";
 
 export class BaseField<
     FieldHexagon extends IBaseHexagon = IBaseHexagon,
@@ -119,4 +119,16 @@ export class BaseField<
             }
         });
     };
+
+    updateDomElements = () => {
+        this.fieldHexagons.forEach((hexagon) => {
+            const relativeValueHexagon = this.findHexagonUsingCoordinates(hexagon.cellCoordinates, HexagonType.Value);
+            if (relativeValueHexagon) {
+                hexagon.cleanDataset();
+                relativeValueHexagon.updateDataset();
+            } else {
+                hexagon.updateDataset();
+            }
+        })
+    }
 }

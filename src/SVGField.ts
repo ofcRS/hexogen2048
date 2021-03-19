@@ -1,11 +1,11 @@
-import { BaseField } from './BaseField';
-import { ISVGField } from './IField';
-import { CellCoordinates, CellData, GetData } from './types';
-import { IGeometry } from './Geometry';
-import { SVGHexagon, HTMLValueHexagon } from './SVGHexagon';
+import { BaseField } from "./BaseField";
+import { ISVGField } from "./IField";
+import { CellCoordinates, CellData, GetData, HexagonType } from "./types";
+import { IGeometry } from "./Geometry";
+import { HTMLValueHexagon, SVGHexagon } from "./SVGHexagon";
 
-import styles from './styles.css';
-import { ISVGHexagon, IValueSVGHexagon } from './IHexagon';
+import styles from "./styles.css";
+import { ISVGHexagon, IValueSVGHexagon } from "./IHexagon";
 
 export class SVGField
     extends BaseField<ISVGHexagon, IValueSVGHexagon>
@@ -46,11 +46,12 @@ export class SVGField
     };
 
     placeValueHexagon = ({ value, ...coordinates }: CellData) => {
-        const relativeFieldHexagon = this.findHexagonUsingCoordinates(
+        const relativeFieldHexagon = this.findHexagonUsingCoordinates<ISVGHexagon>(
             coordinates
         );
 
         if (relativeFieldHexagon) {
+            relativeFieldHexagon.cleanDataset();
             const hexagon = new HTMLValueHexagon(
                 this._geometry,
                 coordinates,
@@ -82,7 +83,7 @@ export class SVGField
         );
         this.valueHexagons.forEach((hex) => {
             if (!updatedList.includes(hex)) {
-                hex.svg?.remove()
+                hex.svg?.remove();
             }
         })
         this.valueHexagons = updatedList;

@@ -4,6 +4,10 @@ export interface IBaseHexagon {
     cellCoordinates: CellCoordinates;
     isEqualCoordinates: (coordinates: CellCoordinates) => boolean;
     center: Center;
+    update: () => void;
+
+    cleanDataset: () => void;
+    updateDataset: () => void;
 }
 
 export interface IBaseValueHexagon extends IBaseHexagon {
@@ -15,7 +19,7 @@ export interface ICanvasHexagon extends IBaseHexagon {
     moveTo: (coordinates: Center) => void;
     getDomNode: () => HTMLDivElement | null;
     updateDataset: () => void;
-    initDomNode: (wrapper: HTMLDivElement) => void;
+    initDomNode: () => void;
 }
 
 export interface IValueCanvasHexagon extends ICanvasHexagon {
@@ -26,7 +30,8 @@ export interface IValueCanvasHexagon extends ICanvasHexagon {
 export interface ISVGHexagon extends IBaseHexagon {
     draw: () => HTMLOrSVGElement;
     svg: SVGSVGElement;
-    update: () => void;
+    cleanDataset: () => void;
+    updateDataset: () => void;
 }
 
 export interface IValueSVGHexagon extends ISVGHexagon {
