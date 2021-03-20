@@ -1,11 +1,11 @@
-import { BaseField } from "./BaseField";
-import { ISVGField } from "./IField";
-import { CellCoordinates, CellData, GetData, HexagonType } from "./types";
-import { IGeometry } from "./Geometry";
-import { HTMLValueHexagon, SVGHexagon } from "./SVGHexagon";
+import { BaseField } from './BaseField';
+import { ISVGField } from './IField';
+import { CellCoordinates, CellData, GetData, HexagonType } from './types';
+import { IGeometry } from './Geometry';
+import { HTMLValueHexagon, SVGHexagon } from './SVGHexagon';
 
-import styles from "./styles.css";
-import { ISVGHexagon, IValueSVGHexagon } from "./IHexagon";
+import styles from './styles.css';
+import { ISVGHexagon, IValueSVGHexagon } from './IHexagon';
 
 export class SVGField
     extends BaseField<ISVGHexagon, IValueSVGHexagon>
@@ -67,7 +67,7 @@ export class SVGField
     };
 
     moveHexagon = (hexagon: ISVGHexagon, newCenter: CellCoordinates) => {
-        const relativeFieldHexagon = this.findHexagonUsingCoordinates(
+        const relativeFieldHexagon = this.findHexagonUsingCoordinates<ISVGHexagon>(
             newCenter
         );
         if (relativeFieldHexagon) {
@@ -77,7 +77,6 @@ export class SVGField
     };
 
     updateHexagonsPosition = async (updatedList: IValueSVGHexagon[]) => {
-
         updatedList.forEach((hex) =>
             this.moveHexagon(hex, { ...hex.cellCoordinates })
         );
@@ -85,19 +84,22 @@ export class SVGField
             if (!updatedList.includes(hex)) {
                 hex.svg?.remove();
             }
-        })
+        });
         this.valueHexagons = updatedList;
     };
 
     updateDomElements = () => {
         this.fieldHexagons.forEach((hexagon) => {
-            const relativeValueHexagon = this.findHexagonUsingCoordinates(hexagon.cellCoordinates, HexagonType.Value);
+            const relativeValueHexagon = this.findHexagonUsingCoordinates<IValueSVGHexagon>(
+                hexagon.cellCoordinates,
+                HexagonType.Value
+            );
             if (relativeValueHexagon) {
                 hexagon.cleanDataset();
                 relativeValueHexagon.updateDataset();
             } else {
                 hexagon.updateDataset();
             }
-        })
-    }
+        });
+    };
 }

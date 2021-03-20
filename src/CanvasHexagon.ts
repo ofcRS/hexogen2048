@@ -1,5 +1,5 @@
 import { IGeometry } from './Geometry';
-import { Axis, CellCoordinates, CellData, Center } from './types';
+import { CellCoordinates, CellData, Center } from './types';
 import { ICanvasField } from './IField';
 import { ICanvasHexagon, IValueCanvasHexagon } from './IHexagon';
 import { BaseHexagon } from './BaseHexagon';
@@ -41,21 +41,6 @@ export class CanvasHexagon extends BaseHexagon implements ICanvasHexagon {
 
         ctx.fillText(`${this.value || ''}`, x, y);
     };
-
-    // getDomNode = (): HTMLDivElement | null => {
-    //     const { y, z, x } = this.cellCoordinates;
-    //     const relativeNode = document.querySelector(
-    //         `[data-x="${x}"][data-y="${y}"][data-z="${z}"]`
-    //     );
-    //     return relativeNode instanceof HTMLDivElement ? relativeNode : null;
-    // };
-
-    // updateDataset = () => {
-    //     const relativeNode = this.getDomNode();
-    //     if (relativeNode) {
-    //         relativeNode.dataset.value = `${this.value}`;
-    //     }
-    // }
 }
 
 export class ValueHexagon extends CanvasHexagon implements IValueCanvasHexagon {

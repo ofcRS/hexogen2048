@@ -5,7 +5,9 @@ import { CellCoordinates, CellData, HexagonType } from './types';
 import { BaseField } from './BaseField';
 import { ICanvasHexagon, IValueCanvasHexagon } from './IHexagon';
 
-export class CanvasField extends BaseField implements ICanvasField {
+export class CanvasField
+    extends BaseField<ICanvasHexagon, IValueCanvasHexagon>
+    implements ICanvasField {
     ctx: CanvasRenderingContext2D;
 
     valueHexagons: IValueCanvasHexagon[] = [];
@@ -195,7 +197,6 @@ export class CanvasField extends BaseField implements ICanvasField {
     placeValueHexagon = ({ value, ...coordinates }: CellData) => {
         const relativeRecord = this.findHexagonUsingCoordinates(coordinates);
         if (relativeRecord) {
-
             const node = this._getDomNode(coordinates);
             node.dataset.value = `${value}`;
 

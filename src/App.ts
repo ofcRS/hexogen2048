@@ -7,9 +7,11 @@ import styles from './styles.css';
 import { GameStatus, GraphicType } from './types';
 import { CanvasField } from './CanvasField';
 import { SVGField } from './SVGField';
+import { IBaseField } from './IField';
+import { IBaseHexagon, IBaseValueHexagon } from './IHexagon';
 
 export class App {
-    private _field: CanvasField | SVGField;
+    private _field: IBaseField;
     private _game: IGame;
     private _dataFetcher: IDataFetcher;
 
@@ -40,7 +42,7 @@ export class App {
     };
 
     startGame = (url: string, graphicType: GraphicType) => {
-        const geometry = new Geometry(100);
+        const geometry = new Geometry(this.CELL_SIZE);
 
         const gameRadius = this.getGameRadius();
 
@@ -54,7 +56,7 @@ export class App {
         this._field =
             graphicType === GraphicType.CANVAS
                 ? new CanvasField(geometry, this._appWrapper, canvasSize)
-                : new SVGField(geometry, this._appWrapper);
+                : (new SVGField(geometry, this._appWrapper) as any);
 
         this._game = new Game(gameRadius, () =>
             this._updateGameStatusNode(GameStatus.OVER)

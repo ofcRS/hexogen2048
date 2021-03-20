@@ -13,8 +13,9 @@ import {
     IBaseHexagon,
     IBaseValueHexagon,
     ICanvasHexagon,
-    IValueCanvasHexagon, IValueSVGHexagon,
-} from "./IHexagon";
+    IValueCanvasHexagon,
+    IValueSVGHexagon,
+} from './IHexagon';
 
 export class BaseField<
     FieldHexagon extends IBaseHexagon = IBaseHexagon,
@@ -35,10 +36,10 @@ export class BaseField<
         coordinates: CellCoordinates,
         type: HexagonType = HexagonType.Field
     ): T | null => {
-        const found = (type === HexagonType.Field
+        const list = (type === HexagonType.Field
             ? this.fieldHexagons
-            : this.valueHexagons
-        ).find(
+            : this.valueHexagons) as IBaseHexagon[];
+        const found = list.find(
             ({ cellCoordinates: { z, y, x } }) =>
                 x === coordinates.x &&
                 y === coordinates.y &&
@@ -119,4 +120,10 @@ export class BaseField<
             }
         });
     };
+
+    updateHexagonsPosition: (
+        hexagons: ValueHexagon[]
+    ) => Promise<unknown | void>;
+    moveHexagon: (hexagon: ValueHexagon, newCenter: CellCoordinates) => void;
+    updateDomElements: () => void;
 }

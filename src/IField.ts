@@ -1,8 +1,6 @@
 import {
     CellCoordinates,
     CellData,
-    GameStatus,
-    GraphicType,
     HexagonType,
     MapAxisToDirection,
 } from './types';
@@ -19,7 +17,7 @@ export interface IBaseField<
     FieldHexagon extends IBaseHexagon = IBaseHexagon,
     ValueHexagon extends IBaseValueHexagon = IBaseValueHexagon
 > {
-    forEachFieldHexagon: (callback: (hexagon: FieldHexagon) => void) => void;
+    forEachFieldHexagon: (callback: (hexagon: IBaseHexagon) => void) => void;
     placeValueHexagon: (coordinates: CellData) => void;
 
     findHexagonUsingCoordinates: <T extends IBaseHexagon>(
@@ -50,6 +48,7 @@ export interface IBaseField<
     removePreviousStuff: () => void;
 
     updateHexagonsPosition: (hexagons: ValueHexagon[]) => Promise<unknown | void>;
+
     moveHexagon: (hexagon: ValueHexagon, newCenter: CellCoordinates) => void;
     updateDomElements: () => void;
 }
