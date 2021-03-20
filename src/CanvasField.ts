@@ -1,20 +1,9 @@
 import { ICanvasField } from './IField';
 import { CanvasHexagon, ValueHexagon } from './CanvasHexagon';
 import { IGeometry } from './Geometry';
-import {
-    CellCoordinates,
-    CellData,
-    Direction,
-    GameStatus,
-    HexagonType,
-    MapAxisToDirection,
-} from './types';
+import { CellCoordinates, CellData, HexagonType } from './types';
 import { BaseField } from './BaseField';
-import {
-    ICanvasHexagon,
-    IValueCanvasHexagon,
-    IValueSVGHexagon,
-} from './IHexagon';
+import { ICanvasHexagon, IValueCanvasHexagon } from './IHexagon';
 
 export class CanvasField extends BaseField implements ICanvasField {
     ctx: CanvasRenderingContext2D;
@@ -155,6 +144,25 @@ export class CanvasField extends BaseField implements ICanvasField {
         return result;
     };
 
+    _getDomNode = (coordinates: CellCoordinates) => {
+        const { y, z, x } = coordinates;
+        const relativeNode = document.querySelector<HTMLDivElement>(
+            `[data-x="${x}"][data-y="${y}"][data-z="${z}"]`
+        );
+        return relativeNode!;
+    };
+
+    _initDomNode = (coordinates: CellCoordinates) => {
+        const { y, z, x } = coordinates;
+
+        const dataNode = document.createElement('div');
+        dataNode.dataset.x = `${x}`;
+        dataNode.dataset.y = `${y}`;
+        dataNode.dataset.z = `${z}`;
+        dataNode.dataset.value = '0';
+        return dataNode;
+    };
+
     initField = (
         getData: (
             callback: (
@@ -176,6 +184,10 @@ export class CanvasField extends BaseField implements ICanvasField {
                 this._wrapper
             );
             hexagon.draw();
+
+            const domNode = this._initDomNode(cellCoordinates);
+            this._wrapper.appendChild(domNode);
+
             this.fieldHexagons.push(hexagon);
         });
     };
@@ -183,6 +195,10 @@ export class CanvasField extends BaseField implements ICanvasField {
     placeValueHexagon = ({ value, ...coordinates }: CellData) => {
         const relativeRecord = this.findHexagonUsingCoordinates(coordinates);
         if (relativeRecord) {
+
+            const node = this._getDomNode(coordinates);
+            node.dataset.value = `${value}`;
+
             const hexagon = new ValueHexagon(
                 { ...relativeRecord.center },
                 this,
@@ -192,8 +208,25 @@ export class CanvasField extends BaseField implements ICanvasField {
                 value
             );
             hexagon.draw();
+
             this.valueHexagons.push(hexagon);
         }
+    };
+
+    updateDomElements = () => {
+        this.fieldHexagons.forEach((hexagon) => {
+            const relativeValueHexagon = this.findHexagonUsingCoordinates<IValueCanvasHexagon>(
+                hexagon.cellCoordinates,
+                HexagonType.Value
+            );
+            const domNode = this._getDomNode(hexagon.cellCoordinates);
+            if (relativeValueHexagon) {
+                const domNode = this._getDomNode(hexagon.cellCoordinates);
+                domNode.dataset.value = `${relativeValueHexagon.value}`;
+            } else {
+                domNode.dataset.value = '0';
+            }
+        });
     };
 
     updateHexagonsPosition = (

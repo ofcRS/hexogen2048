@@ -88,4 +88,16 @@ export class SVGField
         })
         this.valueHexagons = updatedList;
     };
+
+    updateDomElements = () => {
+        this.fieldHexagons.forEach((hexagon) => {
+            const relativeValueHexagon = this.findHexagonUsingCoordinates(hexagon.cellCoordinates, HexagonType.Value);
+            if (relativeValueHexagon) {
+                hexagon.cleanDataset();
+                relativeValueHexagon.updateDataset();
+            } else {
+                hexagon.updateDataset();
+            }
+        })
+    }
 }

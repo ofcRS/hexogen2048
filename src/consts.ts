@@ -19,14 +19,14 @@ export const graphicTypes = [
 
 export const serverUrls = [
     {
-        id: 'remote',
-        value: '//68f02c80-3bed-4e10-a747-4ff774ae905a.pub.instances.scw.cloud',
-        title: 'Remote server',
-    },
-    {
         id: 'localhost',
         value: 'http://localhost:13337',
         title: 'Local server',
+    },
+    {
+        id: 'remote',
+        value: '//68f02c80-3bed-4e10-a747-4ff774ae905a.pub.instances.scw.cloud',
+        title: 'Remote server',
     },
 ] as const;
 

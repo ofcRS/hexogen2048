@@ -42,30 +42,20 @@ export class CanvasHexagon extends BaseHexagon implements ICanvasHexagon {
         ctx.fillText(`${this.value || ''}`, x, y);
     };
 
-    initDomNode = () => {
-        const { y, z, x } = this.cellCoordinates;
-        const dataNode = document.createElement('div');
-        dataNode.dataset.x = `${x}`;
-        dataNode.dataset.y = `${y}`;
-        dataNode.dataset.z = `${z}`;
-        dataNode.dataset.value = '0';
-        this._wrapper.appendChild(dataNode);
-    };
+    // getDomNode = (): HTMLDivElement | null => {
+    //     const { y, z, x } = this.cellCoordinates;
+    //     const relativeNode = document.querySelector(
+    //         `[data-x="${x}"][data-y="${y}"][data-z="${z}"]`
+    //     );
+    //     return relativeNode instanceof HTMLDivElement ? relativeNode : null;
+    // };
 
-    getDomNode = (): HTMLDivElement | null => {
-        const { y, z, x } = this.cellCoordinates;
-        const relativeNode = document.querySelector(
-            `[data-x="${x}"][data-y="${y}"][data-z="${z}"]`
-        );
-        return relativeNode instanceof HTMLDivElement ? relativeNode : null;
-    };
-
-    updateDataset = () => {
-        const relativeNode = this.getDomNode();
-        if (relativeNode) {
-            relativeNode.dataset.value = `${this.value}`;
-        }
-    }
+    // updateDataset = () => {
+    //     const relativeNode = this.getDomNode();
+    //     if (relativeNode) {
+    //         relativeNode.dataset.value = `${this.value}`;
+    //     }
+    // }
 }
 
 export class ValueHexagon extends CanvasHexagon implements IValueCanvasHexagon {
