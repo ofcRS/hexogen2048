@@ -35,7 +35,7 @@ export class SVGHexagon extends BaseHexagon implements ISVGHexagon {
 
         const text =
             this.value &&
-            `<text fill="#fff" font-size="32px">${this.value}</text>`;
+            `<text text-anchor="middle" fill="#fff" font-size="32px">${this.value}</text>`;
 
         return `<polygon stroke="red" fill="${
             this.value ? '#f25f5c' : '#fff'
@@ -77,6 +77,25 @@ export class SVGHexagon extends BaseHexagon implements ISVGHexagon {
         ['x', 'y', 'z', 'value'].forEach((atr) => {
             this.svg.removeAttribute('data-' + atr);
         });
+    };
+
+    playAnimation = () => {
+        this.svg.animate(
+            [
+                {
+                    transform: 'scale(1)',
+                },
+                {
+                    transform: 'scale(1.5)',
+                },
+                {
+                    transform: 'scale(1)',
+                },
+            ],
+            {
+                duration: 300,
+            }
+        );
     };
 
     update = () => {

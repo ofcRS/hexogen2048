@@ -1,5 +1,5 @@
 import { IBaseHexagon } from './IHexagon';
-import { Axis, CellCoordinates, Center } from "./types";
+import { Axis, CellCoordinates, Center } from './types';
 import { IGeometry } from './Geometry';
 
 export class BaseHexagon implements IBaseHexagon {
@@ -15,7 +15,8 @@ export class BaseHexagon implements IBaseHexagon {
     };
 
     getHexagonPoints = (
-        callback: (point: { x: number; y: number }) => void
+        callback: (point: { x: number; y: number }) => void,
+        insidePath?: boolean
     ) => {
         const {
             getHorizontalDistanceToVertex,
@@ -23,8 +24,8 @@ export class BaseHexagon implements IBaseHexagon {
         } = this.geometry;
 
         for (let i = 0; i < 6; i++) {
-            const x = getHorizontalDistanceToVertex(i * 60);
-            const y = getVerticalDistanceToVertex(i * 60);
+            const x = getHorizontalDistanceToVertex(i * 60, insidePath);
+            const y = getVerticalDistanceToVertex(i * 60, insidePath);
 
             callback({
                 y,

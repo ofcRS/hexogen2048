@@ -63,6 +63,7 @@ export class SVGField
             );
             this.valueHexagons.push(hexagon);
             this._hexagonsWrapper.appendChild(hexagon.draw());
+            hexagon.playAnimation();
         }
     };
 

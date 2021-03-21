@@ -4,6 +4,10 @@ export interface IBaseHexagon {
     cellCoordinates: CellCoordinates;
     isEqualCoordinates: (coordinates: CellCoordinates) => boolean;
     center: Center;
+    getHexagonPoints: (
+        callback: (point: { x: number; y: number }) => void,
+        insidePath?: boolean
+    ) => void;
 }
 
 export interface IBaseValueHexagon extends IBaseHexagon {
@@ -27,6 +31,7 @@ export interface ISVGHexagon extends IBaseHexagon {
     cleanDataset: () => void;
     updateDataset: () => void;
     update: () => void;
+    playAnimation: () => void;
 }
 
 export interface IValueSVGHexagon extends ISVGHexagon {

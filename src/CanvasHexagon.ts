@@ -39,7 +39,17 @@ export class CanvasHexagon extends BaseHexagon implements ICanvasHexagon {
         ctx.closePath();
         ctx.stroke();
 
+        ctx.beginPath();
+
+        this.getHexagonPoints((point) => {
+            ctx.lineTo(point.x + x, point.y + y);
+        }, true);
+
+        ctx.closePath();
+        ctx.stroke();
+
         ctx.fillText(`${this.value || ''}`, x, y);
+
     };
 }
 
